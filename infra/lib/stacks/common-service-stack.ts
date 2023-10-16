@@ -130,18 +130,22 @@ export class CommonServiceStack extends Stack {
     const eip1 = new ec2.CfnEIP(this, 'EIP1', {
       tags: [{ key: 'Name', value: `${ns}NLB-EIP1` }],
     });
+    /*
     const eip2 = new ec2.CfnEIP(this, 'EIP2', {
       tags: [{ key: 'Name', value: `${ns}NLB-EIP2` }],
     });
+    */
     const subnetMappings = [
       {
         subnetId: props.vpc.publicSubnets[0].subnetId,
         allocationId: eip1.attrAllocationId,
       } as elbv2.CfnLoadBalancer.SubnetMappingProperty,
+      /*
       {
         subnetId: props.vpc.publicSubnets[1].subnetId,
         allocationId: eip2.attrAllocationId,
       } as elbv2.CfnLoadBalancer.SubnetMappingProperty,
+      */
     ];
     cfnlb.subnets = [];
     cfnlb.subnetMappings = subnetMappings;
