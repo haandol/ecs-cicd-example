@@ -120,15 +120,24 @@ export class CommonServiceStack extends Stack {
     const nlb = new elbv2.NetworkLoadBalancer(this, `ServiceNLB`, {
       loadBalancerName: ns.toLowerCase(),
       vpc: props.vpc,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
       internetFacing: true,
     });
     const cfnlb = nlb.node.defaultChild as elbv2.CfnLoadBalancer;
     cfnlb.addPropertyOverride('SecurityGroups', [
       securityGroup.securityGroupId,
     ]);
+
+    const eip = new ec2.CfnEIP(this, 'EIP', {
+      tags: [{ key: 'Name', value: `${ns}NLB` }],
+    });
+    const subnetMappings = [
+      {
+        subnetId: props.vpc.publicSubnets[0].subnetId,
+        allocationId: eip.attrAllocationId,
+      } as elbv2.CfnLoadBalancer.SubnetMappingProperty,
+    ];
+    cfnlb.subnets = [];
+    cfnlb.subnetMappings = subnetMappings;
 
     new CfnOutput(this, 'NLBDnsName', {
       value: nlb.loadBalancerDnsName,
