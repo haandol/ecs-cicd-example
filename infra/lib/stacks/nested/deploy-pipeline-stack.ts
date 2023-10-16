@@ -109,6 +109,8 @@ export class DeployPipeline extends NestedStack {
       Stack.of(this).region
     }.amazonaws.com/${props.ecrRepositoryName}`;
     const buildCommands = [
+      'echo "pull latest image"',
+      `docker pull ${repositoryUri}:latest`,
       'echo "tag latest to $IMAGE_TAG"',
       `docker tag ${repositoryUri}:latest ${repositoryUri}:$IMAGE_TAG`,
     ];
@@ -132,8 +134,7 @@ export class DeployPipeline extends NestedStack {
           pre_build: {
             commands: [
               'echo set IMAGE_TAG env',
-              'COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)',
-              'IMAGE_TAG=${COMMIT_HASH:=latest}',
+              'IMAGE_TAG=$CODEBUILD_BUILD_NUMBER',
               'echo Login to ECR ...',
               `aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$REGION.amazonaws.com"`,
             ],
