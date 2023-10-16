@@ -103,7 +103,10 @@ export class EchoServiceStack extends Stack {
       serviceName: `${ns}${props.serviceName}`,
       platformVersion: ecs.FargatePlatformVersion.LATEST,
       cluster: props.cluster,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        availabilityZones: [props.vpc.publicSubnets[0].availabilityZone],
+      },
       circuitBreaker: { rollback: true },
       desiredCount: 1,
       taskDefinition,
