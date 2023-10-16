@@ -1,0 +1,40 @@
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - docker buildx build -t http-echo --platform linux/amd64 .
+
+  login:
+    cmds:
+      - aws ecr get-login-password --region ap-northeast-2 {{.CLI_ARGS}} | docker login --username AWS --password-stdin "$(aws sts get-caller-identity --query Account --output text {{.CLI_ARGS}}).dkr.ecr.ap-northeast-2.amazonaws.com"
+
+  create-repo:
+    vars:
+      REPOSITORIES: |
+        http-echo
+
+    cmds:
+      - |
+        ARR=(`echo "{{.REPOSITORIES}}" | tr '\n' ' '`)
+        for REPO in ${ARR[@]}
+        do
+          aws ecr create-repository --repository-name ${REPO} {{.CLI_ARGS}}
+        done
+
+  push-echo:
+    deps: [build, login]
+
+    vars:
+      IMAGE_TAG: latest
+      REPOSITORIES: |
+        http-echo
+
+    cmds:
+      - |
+        ARR=(`echo "{{.REPOSITORIES}}" | tr '\n' ' '`)
+        for REPO in ${ARR[@]}
+        do
+          docker tag http-echo "$(aws sts get-caller-identity --query Account --output text {{.CLI_ARGS}}).dkr.ecr.ap-northeast-2.amazonaws.com/${REPO}:{{.IMAGE_TAG}}"
+          docker push "$(aws sts get-caller-identity --query Account --output text {{.CLI_ARGS}}).dkr.ecr.ap-northeast-2.amazonaws.com/${REPO}:{{.IMAGE_TAG}}"
+        done

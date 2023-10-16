@@ -1,0 +1,11 @@
+[app]
+ns="EcsCICDDemo"
+stage="Dev"
+
+[aws]
+region="ap-northeast-2"
+
+[service.echo]
+name="http-echo"
+port=8090
+ecrRepositoryName="http-echo"
