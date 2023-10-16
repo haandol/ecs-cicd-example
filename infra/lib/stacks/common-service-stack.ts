@@ -26,7 +26,7 @@ export class CommonServiceStack extends Stack {
     this.taskExecutionRole = this.newEcsTaskExecutionRole(ns);
     this.taskSecurityGroup = this.newEcsTaskSecurityGroup(ns, props);
     this.cluster = this.newEcsCluster(ns, props);
-    this.nlb = this.newNetworkLoadbalancer(ns, this.taskSecurityGroup, props);
+    this.nlb = this.newNetworkLoadbalancer(ns, props);
   }
 
   newEcsTaskRole(ns: string): iam.IRole {
@@ -87,6 +87,11 @@ export class CommonServiceStack extends Stack {
       ec2.Port.allTcp(),
       'Allow Internal'
     );
+    securityGroup.connections.allowFrom(
+      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Port.allTcp(),
+      'Allow VPC'
+    );
     return securityGroup;
   }
 
@@ -102,19 +107,15 @@ export class CommonServiceStack extends Stack {
     });
   }
 
-  newNetworkLoadbalancer(
-    ns: string,
-    taskSecurityGroup: ec2.ISecurityGroup,
-    props: IProps
-  ): elbv2.NetworkLoadBalancer {
+  newNetworkLoadbalancer(ns: string, props: IProps): elbv2.NetworkLoadBalancer {
     const securityGroup = new ec2.SecurityGroup(this, 'NLBSecurityGroup', {
       securityGroupName: `${ns}NLBSecurityGroup`,
       vpc: props.vpc,
     });
     securityGroup.connections.allowFrom(
-      taskSecurityGroup,
+      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
       ec2.Port.allTraffic(),
-      'Allow ECS Task'
+      'Allow VPC'
     );
     securityGroup.connections.allowFrom(
       ec2.Peer.ipv4(props.myip),
@@ -130,7 +131,6 @@ export class CommonServiceStack extends Stack {
     const cfnlb = nlb.node.defaultChild as elbv2.CfnLoadBalancer;
     cfnlb.addPropertyOverride('SecurityGroups', [
       securityGroup.securityGroupId,
-      taskSecurityGroup.securityGroupId,
     ]);
 
     const eip1 = new ec2.CfnEIP(this, 'EIP1', {
