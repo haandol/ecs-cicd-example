@@ -9,3 +9,6 @@ region="ap-northeast-2"
 name="http-echo"
 port=8090
 ecrRepositoryName="http-echo"
+
+[user]
+myip="127.0.0.1/32"

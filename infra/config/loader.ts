@@ -23,6 +23,9 @@ interface IConfig {
   service: {
     echo: IService;
   };
+  user: {
+    myip: string;
+  };
 }
 
 const cfg = toml.parse(
@@ -50,6 +53,9 @@ const schema = joi
         port: joi.number().port(),
         ecrRepositoryName: joi.string(),
       }),
+    }),
+    user: joi.object({
+      myip: joi.string().ip(),
     }),
   })
   .unknown();

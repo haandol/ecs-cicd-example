@@ -22,6 +22,7 @@ const commonServiceStack = new CommonServiceStack(
   `${Config.app.ns}CommonServiceStack`,
   {
     vpc: vpcStack.vpc,
+    myip: Config.user.myip,
   }
 );
 commonServiceStack.addDependency(vpcStack);

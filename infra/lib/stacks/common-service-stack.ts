@@ -7,6 +7,7 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 
 interface IProps extends StackProps {
   vpc: ec2.IVpc;
+  myip: string;
 }
 
 export class CommonServiceStack extends Stack {
@@ -88,6 +89,11 @@ export class CommonServiceStack extends Stack {
     );
     securityGroup.connections.allowFrom(
       ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Port.allTcp(),
+      'Allow VPC'
+    );
+    securityGroup.connections.allowFrom(
+      ec2.Peer.ipv4(props.myip),
       ec2.Port.allTcp(),
       'Allow VPC'
     );
