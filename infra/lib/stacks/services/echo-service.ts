@@ -134,9 +134,6 @@ export class EchoServiceStack extends Stack {
       targets: [fargateService],
       healthCheck: {
         enabled: true,
-        interval: Duration.seconds(30),
-        timeout: Duration.seconds(20),
-        healthyThresholdCount: 3,
       },
     });
     new elbv2.NetworkListener(this, 'Listener', {
