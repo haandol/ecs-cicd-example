@@ -26,7 +26,7 @@ export class CommonServiceStack extends Stack {
     this.taskExecutionRole = this.newEcsTaskExecutionRole(ns);
     this.taskSecurityGroup = this.newEcsTaskSecurityGroup(ns, props);
     this.cluster = this.newEcsCluster(ns, props);
-    this.nlb = this.newNetworkLoadbalancer(ns, props, this.taskSecurityGroup);
+    this.nlb = this.newNetworkLoadbalancer(ns, this.taskSecurityGroup, props);
   }
 
   newEcsTaskRole(ns: string): iam.IRole {
@@ -87,16 +87,6 @@ export class CommonServiceStack extends Stack {
       ec2.Port.allTcp(),
       'Allow Internal'
     );
-    securityGroup.connections.allowFrom(
-      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
-      ec2.Port.allTcp(),
-      'Allow VPC'
-    );
-    securityGroup.connections.allowFrom(
-      ec2.Peer.ipv4(props.myip),
-      ec2.Port.allTcp(),
-      'Allow MyIP'
-    );
     return securityGroup;
   }
 
@@ -114,9 +104,24 @@ export class CommonServiceStack extends Stack {
 
   newNetworkLoadbalancer(
     ns: string,
-    props: IProps,
-    securityGroup: ec2.ISecurityGroup
+    taskSecurityGroup: ec2.ISecurityGroup,
+    props: IProps
   ): elbv2.NetworkLoadBalancer {
+    const securityGroup = new ec2.SecurityGroup(this, 'NLBSecurityGroup', {
+      securityGroupName: `${ns}NLBSecurityGroup`,
+      vpc: props.vpc,
+    });
+    securityGroup.connections.allowFrom(
+      taskSecurityGroup,
+      ec2.Port.allTraffic(),
+      'Allow ECS Task'
+    );
+    securityGroup.connections.allowFrom(
+      ec2.Peer.ipv4(props.myip),
+      ec2.Port.allTraffic(),
+      'Allow MyIP'
+    );
+
     const nlb = new elbv2.NetworkLoadBalancer(this, `ServiceNLB`, {
       loadBalancerName: ns.toLowerCase(),
       vpc: props.vpc,
@@ -125,27 +130,17 @@ export class CommonServiceStack extends Stack {
     const cfnlb = nlb.node.defaultChild as elbv2.CfnLoadBalancer;
     cfnlb.addPropertyOverride('SecurityGroups', [
       securityGroup.securityGroupId,
+      taskSecurityGroup.securityGroupId,
     ]);
 
     const eip1 = new ec2.CfnEIP(this, 'EIP1', {
       tags: [{ key: 'Name', value: `${ns}NLB-EIP1` }],
     });
-    /*
-    const eip2 = new ec2.CfnEIP(this, 'EIP2', {
-      tags: [{ key: 'Name', value: `${ns}NLB-EIP2` }],
-    });
-    */
     const subnetMappings = [
       {
         subnetId: props.vpc.publicSubnets[0].subnetId,
         allocationId: eip1.attrAllocationId,
       } as elbv2.CfnLoadBalancer.SubnetMappingProperty,
-      /*
-      {
-        subnetId: props.vpc.publicSubnets[1].subnetId,
-        allocationId: eip2.attrAllocationId,
-      } as elbv2.CfnLoadBalancer.SubnetMappingProperty,
-      */
     ];
     cfnlb.subnets = [];
     cfnlb.subnetMappings = subnetMappings;
@@ -153,6 +148,7 @@ export class CommonServiceStack extends Stack {
     new CfnOutput(this, 'NLBDnsName', {
       value: nlb.loadBalancerDnsName,
     });
+
     return nlb;
   }
 }
