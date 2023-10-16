@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
@@ -124,7 +124,7 @@ export class EchoServiceStack extends Stack {
     return service;
   }
 
-  registerServiceToLoadBalancer(
+  private registerServiceToLoadBalancer(
     fargateService: ecs.FargateService,
     props: IProps
   ) {
@@ -133,7 +133,10 @@ export class EchoServiceStack extends Stack {
       vpc: props.vpc,
       targets: [fargateService],
       healthCheck: {
+        interval: Duration.seconds(10),
         enabled: true,
+        protocol: elbv2.Protocol.TCP,
+        healthyThresholdCount: 2,
       },
     });
     new elbv2.NetworkListener(this, 'Listener', {
