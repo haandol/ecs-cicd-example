@@ -4,4 +4,4 @@ RUN apk --no-cache add curl
 
 EXPOSE 8090
 
-CMD ["-listen=:8090", "-text=ok-v2"]
+CMD ["-listen=:8090", "-text=v1"]
