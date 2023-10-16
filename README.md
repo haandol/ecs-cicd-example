@@ -1,4 +1,4 @@
-# ECS CI/CD Example
+# ECS ECR CI/CD Example
 
 CI/CD pipeline triggering by ECR repo changes.
 
