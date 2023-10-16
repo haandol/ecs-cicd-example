@@ -15,7 +15,7 @@ interface IProps extends NestedStackProps {
 
 export class DeployPipeline extends NestedStack {
   constructor(scope: Construct, id: string, props: IProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const ns = this.node.tryGetContext('ns') as string;
 
