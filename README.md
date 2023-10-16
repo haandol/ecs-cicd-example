@@ -57,6 +57,13 @@ $ task push-echo -- --profile demo
 
 open [**infra/config/dev.toml**](/infra/config/dev.toml) and modify if necessary.
 
+if you want to import existing VPC add below to toml. no vpc id is provided, it will create a new VPC for you.
+
+```toml
+[vpc]
+id="VPC_ID"
+```
+
 > only `user.myip` ip address is allowed to invoke loadbalancer via internet. so change it your local public ip address to test the system.
 
 and copy `config/dev.toml` file to project root as `.toml`
