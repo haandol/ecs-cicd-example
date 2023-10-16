@@ -95,7 +95,7 @@ export class CommonServiceStack extends Stack {
     securityGroup.connections.allowFrom(
       ec2.Peer.ipv4(props.myip),
       ec2.Port.allTcp(),
-      'Allow VPC'
+      'Allow MyIP'
     );
     return securityGroup;
   }
