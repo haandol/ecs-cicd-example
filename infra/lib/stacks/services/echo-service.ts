@@ -133,10 +133,10 @@ export class EchoServiceStack extends Stack {
       vpc: props.vpc,
       targets: [fargateService],
       healthCheck: {
-        interval: Duration.seconds(10),
         enabled: true,
-        protocol: elbv2.Protocol.TCP,
-        healthyThresholdCount: 2,
+        interval: Duration.seconds(30),
+        timeout: Duration.seconds(20),
+        healthyThresholdCount: 3,
       },
     });
     new elbv2.NetworkListener(this, 'Listener', {
