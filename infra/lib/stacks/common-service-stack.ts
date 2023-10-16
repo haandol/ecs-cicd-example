@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
@@ -123,6 +123,10 @@ export class CommonServiceStack extends Stack {
     cfnlb.addPropertyOverride('SecurityGroups', [
       securityGroup.securityGroupId,
     ]);
+
+    new CfnOutput(this, 'NLBDnsName', {
+      value: nlb.loadBalancerDnsName,
+    });
     return nlb;
   }
 }
