@@ -8,6 +8,7 @@ region="ap-northeast-2"
 [service.echo]
 name="http-echo"
 port=8090
+codeRepositoryName="http-echo"
 ecrRepositoryName="http-echo"
 
 [user]

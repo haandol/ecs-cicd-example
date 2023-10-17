@@ -1,6 +1,6 @@
 # ECS ECR CI/CD Example
 
-CI/CD pipeline triggering by ECR repo changes.
+CI/CD pipeline triggering by Codecommit repo changes.
 
 ![Architecture](/docs/architecture.png)
 
@@ -36,18 +36,39 @@ install taskfile cli
 
 ```bash
 $ npm i -g @go-task/cli
+```
+
+## Setup repositories for services
+
+### Create repositories
+
+**run below in [app](/app) dir,**
+
+```bash
+$ cd ../app
 $ task --list-all
 ```
 
-## Setup ECR repositories for services
-
-### Create repositories
+create ECR and Codecommit Repository
 
 ```bash
 $ task create-repo -- --profile demo
 ```
 
-### Push initial images
+### Push code to codecommit
+
+change default repository name, `http-echo` if necessary. if you do, you should modify following variables also,
+
+- [.toml](/infra/config/dev.toml) config in [infra](/infra)
+- Repositories settings at [Taskfile](/app/Taskfile.yml) in [app](/app).
+
+```bash
+$ cd ..
+$ git remote add codecommit codecommit::ap-northeast-2://demo@http-echo
+$ git push codecommit
+```
+
+### Push initial image to ECR
 
 ```bash
 $ task push-echo -- --profile demo

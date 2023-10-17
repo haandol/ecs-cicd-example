@@ -7,6 +7,7 @@ interface IService {
   name: string;
   port: number;
   ecrRepositoryName: string;
+  codeRepositoryName: string;
 }
 
 interface IConfig {
@@ -52,6 +53,7 @@ const schema = joi
         name: joi.string(),
         port: joi.number().port(),
         ecrRepositoryName: joi.string(),
+        codeRepositoryName: joi.string(),
       }),
     }),
     user: joi.object({

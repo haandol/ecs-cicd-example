@@ -41,6 +41,7 @@ const echoService = new EchoServiceStack(
     serviceName: Config.service.echo.name,
     servicePort: Config.service.echo.port,
     ecrRepositoryName: Config.service.echo.ecrRepositoryName,
+    codeRepositoryName: Config.service.echo.codeRepositoryName,
   }
 );
 echoService.addDependency(vpcStack);

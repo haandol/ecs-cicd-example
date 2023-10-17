@@ -20,6 +20,7 @@ tasks:
         for REPO in ${ARR[@]}
         do
           aws ecr create-repository --repository-name ${REPO} {{.CLI_ARGS}}
+          aws codecommit create-repository --repository-name ${REPO} {{.CLI_ARGS}}
         done
 
   push-echo:

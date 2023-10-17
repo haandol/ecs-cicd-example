@@ -4,13 +4,14 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as cpactions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 
 interface IProps extends NestedStackProps {
   fargateService: ecs.IBaseService;
   serviceName: string;
   ecrRepositoryName: string;
+  codeRepositoryName: string;
 }
 
 export class DeployPipeline extends NestedStack {
@@ -31,18 +32,18 @@ export class DeployPipeline extends NestedStack {
     );
 
     // source stage
-    const repository = ecr.Repository.fromRepositoryName(
+    const repository = codecommit.Repository.fromRepositoryName(
       this,
-      `EcrRepository`,
-      props.ecrRepositoryName
+      `CodeRepository`,
+      props.codeRepositoryName
     );
     const checkoutStage = pipeline.addStage({ stageName: 'Source' });
     const sourceOutput = codepipeline.Artifact.artifact('source');
     checkoutStage.addAction(
-      new cpactions.EcrSourceAction({
+      new cpactions.CodeCommitSourceAction({
         output: sourceOutput,
-        imageTag: 'latest',
-        actionName: 'ecrSource',
+        branch: 'main',
+        actionName: 'checkoutSource',
         repository,
       })
     );
@@ -95,10 +96,6 @@ export class DeployPipeline extends NestedStack {
       managedPolicyArn:
         'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser',
     });
-    role.addManagedPolicy({
-      managedPolicyArn:
-        'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly',
-    });
     return role;
   }
 
@@ -109,9 +106,8 @@ export class DeployPipeline extends NestedStack {
       Stack.of(this).region
     }.amazonaws.com/${props.ecrRepositoryName}`;
     const buildCommands = [
-      'echo "pull latest image"',
-      `docker pull ${repositoryUri}:latest`,
-      'echo "tag latest to $IMAGE_TAG"',
+      'echo Build Dockerfile ... with tag $IMAGE_TAG',
+      `docker build -t ${repositoryUri}:latest .`,
       `docker tag ${repositoryUri}:latest ${repositoryUri}:$IMAGE_TAG`,
     ];
 
@@ -128,13 +124,16 @@ export class DeployPipeline extends NestedStack {
         phases: {
           install: {
             'runtime-versions': {
-              golang: '1.18',
+              golang: '1.21',
             },
           },
           pre_build: {
             commands: [
+              // move to app folder
+              'cd app',
               'echo set IMAGE_TAG env',
-              'IMAGE_TAG=$CODEBUILD_BUILD_NUMBER',
+              'COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)',
+              'IMAGE_TAG=${COMMIT_HASH:=latest}',
               'echo Login to ECR ...',
               `aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$REGION.amazonaws.com"`,
             ],
@@ -144,6 +143,7 @@ export class DeployPipeline extends NestedStack {
             commands: [
               'echo Build completed on `date`',
               'echo Pushing the Docker images...',
+              `docker push ${repositoryUri}:latest`,
               `docker push ${repositoryUri}:$IMAGE_TAG`,
               'echo Writing imagedefinitions.json ...',
               `printf '[{"name":"${props.serviceName}","imageUri":"${repositoryUri}:%s"}]' $IMAGE_TAG > imagedefinitions.json`,
@@ -159,7 +159,7 @@ export class DeployPipeline extends NestedStack {
       role,
       environment: {
         privileged: true,
-        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
+        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
       },
     });
 

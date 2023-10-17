@@ -1,4 +1,4 @@
-import { Stack, StackProps, Duration } from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
@@ -18,6 +18,7 @@ interface IProps extends StackProps {
   readonly serviceName: string;
   readonly servicePort: number;
   readonly ecrRepositoryName: string;
+  readonly codeRepositoryName: string;
 }
 
 export class EchoServiceStack extends Stack {
@@ -34,6 +35,7 @@ export class EchoServiceStack extends Stack {
       fargateService,
       serviceName: props.serviceName,
       ecrRepositoryName: props.ecrRepositoryName,
+      codeRepositoryName: props.codeRepositoryName,
     });
   }
 
