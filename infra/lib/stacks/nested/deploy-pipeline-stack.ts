@@ -152,7 +152,7 @@ export class DeployPipeline extends NestedStack {
           },
         },
         artifacts: {
-          files: ['imagedefinitions.json'],
+          files: ['app/imagedefinitions.json'],
           'discard-paths': 'yes',
         },
       }),
