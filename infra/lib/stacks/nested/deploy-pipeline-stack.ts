@@ -124,7 +124,7 @@ export class DeployPipeline extends NestedStack {
         phases: {
           install: {
             'runtime-versions': {
-              golang: '1.21',
+              golang: '1.20',
             },
           },
           pre_build: {
