@@ -13,3 +13,6 @@ ecrRepositoryName="http-echo"
 
 [user]
 myip="127.0.0.1/32"
+
+# [notification]
+# hookUrl=""

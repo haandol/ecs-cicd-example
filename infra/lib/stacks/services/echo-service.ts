@@ -19,6 +19,7 @@ interface IProps extends StackProps {
   readonly servicePort: number;
   readonly ecrRepositoryName: string;
   readonly codeRepositoryName: string;
+  readonly notificationHookUrl?: string;
 }
 
 export class EchoServiceStack extends Stack {
@@ -36,6 +37,7 @@ export class EchoServiceStack extends Stack {
       serviceName: props.serviceName,
       ecrRepositoryName: props.ecrRepositoryName,
       codeRepositoryName: props.codeRepositoryName,
+      notificationHookUrl: props.notificationHookUrl,
     });
   }
 

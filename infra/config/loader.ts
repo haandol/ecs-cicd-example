@@ -27,6 +27,9 @@ interface IConfig {
   user: {
     myip: string;
   };
+  notification?: {
+    hookUrl: string;
+  };
 }
 
 const cfg = toml.parse(
@@ -59,6 +62,11 @@ const schema = joi
     user: joi.object({
       myip: joi.string().ip(),
     }),
+    notification: joi
+      .object({
+        hookUrl: joi.string(),
+      })
+      .optional(),
   })
   .unknown();
 

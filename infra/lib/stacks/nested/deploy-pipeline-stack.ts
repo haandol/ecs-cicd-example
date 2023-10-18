@@ -1,17 +1,24 @@
 import { Stack, NestedStack, NestedStackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as path from 'path';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as cpactions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 
 interface IProps extends NestedStackProps {
   fargateService: ecs.IBaseService;
   serviceName: string;
   ecrRepositoryName: string;
   codeRepositoryName: string;
+  notificationHookUrl?: string;
 }
 
 export class DeployPipeline extends NestedStack {
@@ -70,6 +77,42 @@ export class DeployPipeline extends NestedStack {
         service: props.fargateService,
       })
     );
+
+    const rule = new notifications.NotificationRule(this, 'NotificationRule', {
+      source: pipeline,
+      events: [
+        codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_STARTED,
+        codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED,
+        codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED,
+      ],
+    });
+    const topic = this.newNotificationTopic(ns, props);
+    rule.addTarget(topic);
+  }
+
+  private newNotificationTopic(ns: string, props: IProps): sns.Topic {
+    const topic = new sns.Topic(this, 'PipelineNotificationTopic', {
+      displayName: `${ns}PipelineNotification`,
+    });
+
+    const fn = new lambdaNodejs.NodejsFunction(this, 'Notification', {
+      functionName: `${ns}PipelineNotification`,
+      entry: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        'functions',
+        'notification.ts'
+      ),
+      runtime: lambda.Runtime.NODEJS_18_X,
+      architecture: lambda.Architecture.ARM_64,
+      environment: {
+        HOOK_URL: props.notificationHookUrl || '',
+      },
+    });
+    topic.addSubscription(new subscriptions.LambdaSubscription(fn));
+
+    return topic;
   }
 
   private createBuildRole() {

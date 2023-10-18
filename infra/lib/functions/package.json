@@ -1,0 +1,15 @@
+{
+  "name": "notify",
+  "version": "0.1.0",
+  "description": "",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.125",
+    "@types/node": "^20.8.7"
+  },
+  "dependencies": {
+    "@types/got": "^9.6.12",
+    "got": "^13.0.0"
+  }
+}
