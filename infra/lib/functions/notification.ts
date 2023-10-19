@@ -9,18 +9,30 @@ export const handler = async (event: SNSEvent) => {
     console.log(message);
 
     if (HookUrl.length > 0) {
-      const resp = await axios.post(
-        HookUrl,
-        {
-          Content: record.Sns.Message,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        const resp = await axios.post(
+          HookUrl,
+          {
+            blocks: [
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: `Deploy: \`\`\`${message}\`\`\``,
+                },
+              },
+            ],
           },
-        }
-      );
-      console.log(resp);
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        console.log('resp: ', resp);
+      } catch (e) {
+        console.error('failed to invoke hook: ', e);
+      }
     }
   }
 
