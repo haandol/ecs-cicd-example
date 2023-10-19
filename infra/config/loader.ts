@@ -28,7 +28,7 @@ interface IConfig {
     myip: string;
   };
   notification?: {
-    hookUrl: string;
+    slackHookUrl: string;
   };
 }
 
@@ -64,7 +64,7 @@ const schema = joi
     }),
     notification: joi
       .object({
-        hookUrl: joi.string(),
+        slackHookUrl: joi.string(),
       })
       .optional(),
   })

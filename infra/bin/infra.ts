@@ -42,7 +42,7 @@ const echoService = new EchoServiceStack(
     servicePort: Config.service.echo.port,
     ecrRepositoryName: Config.service.echo.ecrRepositoryName,
     codeRepositoryName: Config.service.echo.codeRepositoryName,
-    notificationHookUrl: Config.notification?.hookUrl,
+    notificationHookUrl: Config.notification?.slackHookUrl,
   }
 );
 echoService.addDependency(vpcStack);
